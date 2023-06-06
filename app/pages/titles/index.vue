@@ -1,14 +1,14 @@
-<template>
-<NuxtLayout>
-  <Craousel></Craousel>
-</NuxtLayout>
-</template>
-<!-- <<script setup>
+<script setup>
+
 const config = useRuntimeConfig();
 const perpage = ref(8);
 const page_no = ref(12);
 
-const { data: titles } = await useAsyncData(
+const modalVisible= ref(false)
+const id=ref(1)
+
+
+const { data: titles,refresh } = await useAsyncData(
   "titles",
   () =>
     $fetch(`${config.apiBase}/titles`, {
@@ -30,6 +30,25 @@ const previous = () => {
 const next = () => {
   page_no.value = page_no.value + 1;
 };
+
+function showModal(val){
+  modalVisible.value = true;
+  id.value=val
+}
+
+async function deleteData(){
+    const {deletedData,error}=await useAsyncData(
+  'delete title',
+  () => $fetch(`${config.apiBase}/titles/${id.value}`  , { 
+    method:'DELETE',
+    baseURL: `${config.base_url}`,
+    })
+);
+if(error!=null){
+    modalVisible.value=false;
+    refresh();
+}
+}
 </script>
 <template>
   <div class="container section">
@@ -44,7 +63,7 @@ const next = () => {
     <div v-else class="row">
       <div v-for="title in titles.data.title" :key="title.id" class="col-12 col-md-6 col-lg-4 col-xl-3 my-2">
         <div class="card h-100 featured-box featured-box-primary featured-box-effect-1 hover-effect-1">
-          <div>
+          <div class="box-content p-2">
             <img src="../../assets/img/img4.jpeg" class="card-img-top img mx-auto" alt="..." />
           </div>
           <div class="card-body">
@@ -53,9 +72,9 @@ const next = () => {
             </h4>
             <p class="card-text movie-desc">{{ title.desc }}</p>
             <div class=" text-center">
-              <NuxtLink to="#" class="btn btn-secondary btn-sm me-1 opacity-75 btnCustom">Details</NuxtLink>
+              <NuxtLink :to='"/titles/"+title.id' class="btn btn-secondary btn-sm me-1 opacity-75 btnCustom">Details</NuxtLink>
               <NuxtLink to="#" class="btn btn-success btn-sm me-1 opacity-75 btnCustom">Edit</NuxtLink>
-              <NuxtLink to="#" class="btn btn-danger btn-sm me-1 opacity-75 btnCustom">Delete</NuxtLink>
+              <button @click="showModal(title.id)" class="btn btn-danger btn-sm me-1 opacity-75 btnCustom">Delete</button>
             </div>
           </div>
         </div>
@@ -69,15 +88,64 @@ const next = () => {
         </button>
       </div>
     </div>
+    <ModalDialog :show="modalVisible" :id="id" @close="()=>modalVisible=false">
+    <template #body>Are You Sure To Delete this Record</template>
+    <template #footer>
+      <button class="btn btn-danger" @click="deleteData()">Yes</button>
+    </template>
+    </ModalDialog>
+
+    <nav aria-label="Page navigation" class="col">
+          <ul class="pagination justify-content-center">
+            <li class="page-item">
+              <NuxtLink
+                class="page-link customLinkColor"
+                href="#"
+                aria-label="Previous"
+                :disabled="page_no > 1"
+                @click="previous()"
+              >
+                <span aria-hidden="true">&laquo;</span>
+              </NuxtLink>
+            </li>
+            <li class="page-item">
+              <span class="page-link customLinkColor" href="#">{{
+                page_no
+              }}</span>
+            </li>
+            <li class="page-item">
+              <NuxtLink
+                class="page-link customLinkColor"
+                href="#"
+                aria-label="Next"
+                :disabled="titles.length < perpage"
+                @click="next()"
+              >
+                <span aria-hidden="true">&raquo;</span>
+              </NuxtLink>
+            </li>
+          </ul>
+        </nav>
   </div>
 </template>
 <style scoped>
-.featured-box .box-content:not(.box-content-border-0) {
+.featured-box {
+  background: #fff;
+  box-sizing: border-box;
+  border-bottom: 1px solid #dfdfdf;
+  border-left: 1px solid #ececec;
+  border-radius: 8px;
+  border-right: 1px solid #ececec;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+.featured-box {
   border-top-width: 4px;
-  border-top: 4px;
 }
 
-.featured-box-primary .box-content {
+.featured-box-primary  {
   border-top-color: #9f2229;
 }
 
@@ -91,28 +159,6 @@ const next = () => {
   transform: translate3d(0, -8px, 0);
 }
 
-.featured-box {
-  background: #fff;
-  box-sizing: border-box;
-  border-bottom: 1px solid #dfdfdf;
-  border-left: 1px solid #ececec;
-  border-radius: 8px;
-  border-right: 1px solid #ececec;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
-  position: relative;
-  text-align: center;
-  z-index: 1;
-}
-
-.featured-box-primary .box-content {
-  border-top-color: #9f2229;
-}
-
-.featured-box .box-content {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  border-top-width: 4px;
-  position: relative;
-}
 
 .featured-box-primary h4 {
   color: #9f2229;
@@ -165,4 +211,4 @@ const next = () => {
 .btnCustom {
   width: 75px;
 }
-</style> -->
+</style>
